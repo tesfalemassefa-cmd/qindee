@@ -53,16 +53,18 @@ h3{margin:16px 0 8px}
 .ov{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
 .md{background:#fff;border-radius:14px;padding:16px;width:100%;max-width:380px;max-height:100%;overflow:auto}
 .md label,.lb{display:block;font-size:13px;color:var(--m);margin-top:6px}
-.lg{max-width:360px;margin:3vh auto 0;padding:16px;text-align:center;overflow:auto;max-height:100%}
-.lg p{color:#000;margin:6px 0}
-.lg .box{border:1px solid var(--b);border-radius:16px;padding:16px;text-align:left}
-.lg h1{color:var(--g);margin:0}
+.lg{max-width:380px;margin:5vh auto;padding:20px;text-align:center;background:#fff;border-radius:16px;border:1px solid var(--b);box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+.lg h1{color:var(--g);margin:0 0 10px 0;font-size:24px}
 table{width:100%;border-collapse:collapse;font-size:11px}
 td,th{border-bottom:1px solid var(--b);padding:5px 2px;text-align:right}
 td:first-child,th:first-child{text-align:left}
 #rp{position:fixed;inset:0;background:#fff;overflow:auto;padding:16px;z-index:20}
 @media print{html,body{overflow:visible;height:auto}#root{display:none}#rp{position:static;overflow:visible}.np{display:none!important}}
 </style>
+</head>
+<body>
+<div id="root"></div>
+
 <script>
 // ==========================================
 // 1. SUPABASE INITIALIZATION
@@ -71,15 +73,13 @@ const SUPABASE_URL = 'https://ktcvwmjjnxdamzecfaxq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_BCjwtGD7bSzQNjVyc6czTg_974UL0z-';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Active Session Variables
 let currentShopId = null;
 let currentUser = null;
+let LG = 'en';
 
 // ==========================================
-// 2. CORE CLOUD FUNCTIONS (Replaces localStorage)
+// 2. CORE CLOUD FUNCTIONS
 // ==========================================
-
-// Load Inventory Items for Current Shop
 async function loadItems() {
   if (!currentShopId) return [];
   const { data, error } = await supabaseClient
@@ -94,7 +94,6 @@ async function loadItems() {
   return data || [];
 }
 
-// Save / Add a New Inventory Item
 async function saveItem(itemData) {
   if (!currentShopId) return;
   const { error } = await supabaseClient
@@ -118,7 +117,6 @@ async function saveItem(itemData) {
   }
 }
 
-// Record a Completed Sale
 async function recordSale(saleData) {
   if (!currentShopId) return;
   const { error } = await supabaseClient
@@ -141,7 +139,6 @@ async function recordSale(saleData) {
   }
 }
 
-// Register a New Shop & Initial Owner Account
 async function registerShopAndOwner(shopName, ownerName, ownerPhone, ownerPin) {
   const { data: shopData, error: shopError } = await supabaseClient
     .from('shops')
@@ -178,52 +175,73 @@ async function registerShopAndOwner(shopName, ownerName, ownerPhone, ownerPin) {
 
   currentShopId = newShopId;
   currentUser = userData;
+  render();
   return { shop: shopData, user: userData };
 }
-</script>
-</head>
-<body>
-<div id="root"></div>
-<script>
-const D={'Sell':['ሽያጭ','Gurgurtaa'],'Home':['መነሻ','Fuula jalqabaa'],'My sales':['የኔ ሽያጭ','Gurgurtaa koo'],'Items':['ዕቃ','Meeshaalee'],'Suppliers':['አቅራቢ','Dhiyeessitoota'],'Credit':['ዱቤ','Liqii'],'Report':['ሪፖርት','Gabaasa'],'Activity':['እንቅስቃሴ','Sochii'],'Staff':['ሰራተኛ','Hojjettoota'],'Shop and Mini Market Management':['የሱቅ እና ሚኒ ማርኬት አስተዳደር','Bulchiinsa Suuqii fi Suuqii Xixiqqoo'],'Sign in':['ግባ','Seeni'],'Log out':['ውጣ','Ba’i'],'Password (4+ characters, case-sensitive)':['የይለፍ ቃል (4+ ፊደላት፣ ትልቅ/ትንሽ ይለያል)','Jecha iccitii (mallattoolee yoo xiqqaate 4; qubee gurguddaa fi xixiqqaan adda)'],'Forgot password?':['የይለፍ ቃል ረሱ?','Jecha iccitii irraanfatte?'],'Wrong password':['የተሳሳተ የይለፍ ቃል','Jecha iccitii sirrii miti'],'Today sales':['የዛሬ ሽያጭ','Gurgurtaa har’aa'],'Profit':['ትርፍ','Bu’aa'],'All-time sales':['ጠቅላላ ሽያጭ','Gurgurtaa waliigalaa'],'Reset / Renew':['እንደገና ጀምር','Irra deebi’ii qindeessi'],'Low stock':['ዝቅተኛ ክምችት','Kuusaa xiqqaate'],'Expiring (3 months)':['የሚያልፍባቸው (3 ወር)','Meeshaalee ji’a 3 keessatti yeroon itti dhumu'],'7 most sold':['7 በብዛት የተሸጡ','Meeshaalee baay’inaan gurguraman 7'],'Cart':['ጋሪ','Meeshaalee bittaa filataman'],'Empty':['ባዶ','Duwwaa'],'Total':['ድምር','Waliigala'],'Cash':['ጥሬ','Maallaqa callaa'],'Mobile':['ሞባይል','Mobaayilii'],'Mixed':['ድብልቅ','Makaa'],'Select bank':['ባንክ ይምረጡ','Baankii filadhu'],'Customer name':['የደንበኛ ስም','Maqaa maamilaa'],'Cash part':['የጥሬ ክፍል','Qooda maallaqa callaa'],'Cash given to customer':['ለደንበኛ የተሰጠ ጥሬ ብር','Maallaqa callaa maamilaaf deebifamu'],'Complete':['ጨርስ','Xumuri'],'Saved':['ተመዝግቧል','Olkaa’ameera'],'New item':['አዲስ ዕቃ','Meeshaa haaraa'],'Name':['ስም','Maqaa'],'Cost':['የተገዛበት ዋጋ','Gatii bitannaa'],'Selling price':['መሸጫ ዋጋ','Gatii gurgurtaa'],'Quantity':['ብዛት','Baay’ina'],'Low-stock alert qty':['ዝቅተኛ ክምችት ማንቂያ','Baay’ina akeekkachiisa kuusaa xiqqaa'],'Expiry date (optional)':['የሚያልፍበት ቀን (አማራጭ)','Guyyaa itti dhumu (dirqama miti)'],'Batch no. (optional)':['ባች ቁጥር (አማራጭ)','Lakkoofsa tuuta oomishaa (dirqama miti)'],'Restock (add qty)':['ክምችት ጨምር','Kuusaa irratti dabali'],'Import from Excel':['ከኤክሴል አስገባ','Excel irraa galchi'],'Search':['ፈልግ','Barbaadi'],'Total unpaid':['ጠቅላላ ያልተከፈለ','Waliigala kaffaltii hin raawwatamne'],'New record':['አዲስ መዝገብ','Galmee haaraa'],'Records':['መዝገብ','Galmeewwan'],'Supplier':['አቅራቢ','Dhiyeessaa'],'Date':['ቀን','Guyyaa'],'Paid':['የተከፈለ','Kaffalameera'],'Unpaid':['ያልተከፈለ','Hin kaffalamne'],'Mark paid':['ተከፍሏል','Kaffalameera'],'Full':['ሙሉ','Guutuu'],'Partial':['ከፊል','Gartokkee'],'Amount':['መጠን','Hamma maallaqaa'],'Method':['መንገድ','Mala kaffaltii'],'Cancel':['ተው','Haqi'],'OK':['እሺ','Tole'],'Close':['ዝጋ','Cufi'],'PDF Export':['PDF ላክ','PDFtti galchi'],'Expense':['ወጪ','Baasii'],'Expenses':['ወጪ','Baasiilee'],'Sales':['ሽያጭ','Gurgurtaa'],'Filtered Range Sales':['የተመረጠ ጊዜ ሽያጭ','Gurgurtaa yeroo filatame keessatti'],'Multi-Day Range Report':['የብዙ ቀን ሪፖርት','Gabaasa guyyoota hedduu'],'Daily Expense Record':['የዕለት ወጪ መዝገብ','Galmee baasii guyyaa'],'Balance Sheet':['ሚዛን','Gabaasa madaallii maallaqaa'],'Quick check':['ፈጣን ምርመራ','Sakatta’iinsa saffisaa'],'Cash in drawer':['በሳጥን ያለ ጥሬ ብር','Maallaqa callaa saanduqa keessa jiru'],'Check now':['አሁን እይ','Amma sakatta’i'],'Item Sales Audit':['የዕቃ ሽያጭ ምርመራ','Sakatta’iinsa gurgurtaa meeshaalee'],'Activity Search':['እንቅስቃሴ ፍለጋ','Barbaacha sochiiwwanii'],'Add worker':['ሰራተኛ ጨምር','Hojjetaa dabali'],'Reset password':['የይለፍ ቃል ቀይር','Jecha iccitii irra deebi’ii qindeessi'],'Customer':['ደንበኛ','Maamila'],'Show':['አሳይ','Agarsiisi'],'Admin':['አስተዳደር','Bulchiinsa'],'Reminders':['ማስታወሻዎች','Yaadachiisota'],'Documents':['ሰነዶች','Sanadoota'],'Day':['ቀን','Guyyaa'],'Week':['ሳምንት','Torban'],'Month':['ወር','Ji’a'],'Quarter':['ሩብ ዓመት','Kurmaana'],'6 months':['6 ወር','Ji’a 6'],'Year':['ዓመት','Waggaa'],'Custom':['ብጁ','Yeroo ofii filadhu'],'Transferred amount':['','Hamma maallaqaa dabarfame'],'Cash received':['','Maallaqa callaa fudhatame'],'Transferred':['','Dabarfameera'],'Give back cash':['','Maallaqa callaa deebisi'],'Still to pay':['','Hamma kaffaltii hafe'],'Save':['','Olkaa’i'],'Late entry':['','Galmee yeroo darbeef galchi'],'Add forgotten item':['','Meeshaa dagatame dabali'],'Item (empty = all)':['','Meeshaa (duwwaa dhiisi = hunda)'],'Original price':['','Gatii jalqabaa'],'Discount %':['','Hir’ina gatii %'],'Discount (birr per unit)':['','Hir’ina gatii (Birrii tokkoof)'],'New price':['','Gatii haaraa'],'Your discount limit':['','Daangaa hir’ina gatii keetii'],'Owner password (above your limit)':['','Jecha iccitii abbaa suuqii (daangaa kee ol yoo ta’e)'],'Role':['','Gahee hojii'],'Title (Electricity, Water, Revenue, Equb, House rent...)':['','Mata-duree (Ibsa elektirikii, bishaanii, galii, equb, kiraa manaafi kkf.)'],'Due date':['','Guyyaa kaffaltiin itti malu'],'Repeat':['','Irra deddeebi’i'],'none / monthly / quarterly / yearly':['','Hin jiru / ji’aan / kurmaanaan / waggaan'],'How many days before should I remind you? (0 or more)':['','Guyyaa meeqa dura akka si yaadachiisu barbaadda? (0 ykn isaa ol)'],'Add to Expenses?':['','Baasiilee keessatti dabalaa?'],'Yes':['','Eeyyee'],'Skip':['','Darbii'],'History':['','Seenaa'],'Added to expenses':['','Baasiilee keessatti dabalameera'],'Skipped (not in expenses)':['','Darbameera (baasii keessatti hin galmoofne)'],'Stopped':['','Dhaabbateera'],'Settings':['','Qindaa’inoota'],'Max discount % for cashiers (above it the owner password is needed)':['','Hir’ina gatii olaanaa kaashiyeriif % (kana ol yoo ta’e jechi iccitii abbaa suuqii barbaachisa)'],'Max discount % for managers':['','Hir’ina gatii olaanaa bulchitootaaf %'],'Owner: no limit':['','Abbaa suuqii: daangaa hin qabu'],'Analysis':['','Xiinxala'],'Average sales per day':['','Gurgurtaa guyyaa tokkoo giddugaleessaa'],'Profit margin':['','Dhibbeentaa bu’aa'],'Items sold':['','Meeshaalee gurguraman'],'Best day':['','Guyyaa gurgurtaan baay’ate'],'Slowest day':['','Guyyaa gurgurtaan xiqqaate'],'Top 5 items':['','Meeshaalee 5n gurgurtaa olaanaa qaban'],'Expenses by type':['','Baasiilee gosa isaaniitiin'],'Total discount given':['','Waliigala hir’ina gatii kenname'],'Discounts':['','Hir’ina gatiiwwanii'],'Money collected':['','Maallaqa walitti qabame'],'Total collected (cash + mobile, incl. credit paid)':['','Waliigala maallaqa walitti qabame (callaa + mobaayilii, kaffaltii liqii dabalatee)'],'of which credit paid':['','Kana keessaa kaffaltii liqii'],'Reminder payments':['','Kaffaltii yaadachiisaa'],'Cost of goods':['','Gatii meeshaalee'],'Profit (gross)':['','Bu’aa waliigalaa (baasiiwwan dursanii hin hir’atin)'],'Profit (net)':['','Bu’aa qulqulluu (baasiiwwan erga hir’ifamanii booda)'],'Cash received (incl. credit collected)':['','Maallaqa callaa fudhatame (liqii irraa walitti qabame dabalatee)'],'Mobile received':['','Maallaqa mobaayilii fudhatame'],'Credit given':['','Liqii kenname'],'Credit collected':['','Liqii irraa kaffalame'],'Credit outstanding (all time)':['','Liqii hafee jiru (yeroo hundaaf)'],'Cash given to customers':['','Maallaqa callaa maamiltootaaf deebifame'],'Security question 1':['','Gaaffii nageenyaa 1'],'Security question 2':['','Gaaffii nageenyaa 2'],'Answer 1':['','Deebii 1'],'Answer 2':['','Deebii 2'],'First name of your mother?':['','Maqaan jalqabaa haadha keetii eenyu?'],'Name of the town you were born in?':['','Maqaan magaalaa ati keessatti dhalatte maal?'],'Name of your first school?':['','Maqaan mana barumsaa kee isa jalqabaa maal?'],'Name of your first pet?':['','Maqaan bineensa manaa kee isa jalqabaa maal?'],'Name of your best childhood friend?':['','Maqaan hiriyyaa ijoollummaa kee isa gaarii maal?'],'Wrong answers':['','Deebiiwwan sirrii hin taane'],'Password too short':['','Jechi iccitii baay’ee gabaabaa dha'],'New password (4+)':['','Jecha iccitii haaraa (mallattoolee 4+)'],'Fill all fields marked *':['','Dirreewwan mallattoo * qaban hunda guuti'],'Expiry must be more than 3 months from today':['','Guyyaan itti dhumu har’a irraa ji’a 3 ol ta’uu qaba'],'Supplier and total required':['','Dhiyeessaanii fi waliigalli barbaachisu'],'Amount must be 1 to ...':['','Hamma maallaqaa 1 hanga ... ta’uu qaba'],'Customer name required':['','Maqaan maamilaa barbaachisa'],'Add an item or a transferred amount':['','Meeshaa tokko yookaan hamma maallaqaa dabarfame galchi'],'Cash exchange':['','Jijjiirama maallaqaa'],'Expected salary date (optional)':['','Guyyaa mindaan kaffalamu eegamu (dirqama miti)'],'Salary amount (optional)':['','Hamma mindaa (dirqama miti)'],'Salary: (worker name)':['','Mindaa: (maqaa hojjetaa)'],'Title required':['','Mata-dureen barbaachisa'],'Choose a file':['','Faayila filadhu'],'PDF, JPG or PNG only':['','PDF, JPG yookaan PNG qofa'],'File too large for the prototype (max 1.2 MB)':['','Faayilichi piroototaayipii kanaaf baay’ee guddaa dha (olaanaan 1.2 MB)'],'Delete document?':['','Sanada haquu?'],'Stop this reminder? (its history is kept)':['','Yaadachiisa kana dhaabuu? (seenaan isaa ni hafa)'],'Reverse this credit payment?':['','Kaffaltii liqii kana duubatti deebisuu?'],'Cost *':['','Gatii bitannaa *'],'Selling price *':['','Gatii gurgurtaa *'],'Name *':['','Maqaa *'],'Quantity *':['','Baay’ina *'],'Expired':['','Yeroon itti dhumeera'],'overdue':['','Yeroon kaffaltii darbeera'],'left':['','Hafe'],'Category':['','Ramaddii'],'Tax / Revenue':['','Taaksii / Galii mootummaa'],'Licence':['','Hayyama'],'Rent':['','Kiraa'],'Utility bill':['','Baasii tajaajilaa (bishaan, ibsaa fi kkf.)'],'Other':['','Kan biraa'],'Reset / Renew date':['','Guyyaa irra deebi’anii qindeessuu / haaromsuu'],'Excel reader not loaded':['','Dubbisaan Excel hin fe’amne'],'Could not read this file':['','Faayila kana dubbisuu hin dandeenye'],'items imported':['','Meeshaaleen galfaman'],'skipped':['','Kan darbaman']};
-const SQ=['First name of your mother?','Name of the town you were born in?','Name of your first school?','Name of your first pet?','Name of your best childhood friend?'];
-const $=s=>document.querySelector(s),K='suke3';
-let S,U=null,V='sell',L=()=>{},cart=[],late=false,hide=true,RG=null,LG='en';
-const T=k=>{const d=D[k];return d&&LG!='en'?(d[LG=='am'?0:1]||k):k};
-const P0=()=>({m:'cash',b:'',c:0,cust:'',co:0});let pay=P0();
-const BK=['CBE','Awash','BOA','Dashen','Wegagen','Nib','Hibret','Zemen','Abay','Oromia','Coop','Enat','Bunna','Berhan','Lion','Tsedey','Sidama','Zamzam','Ahadu','Amhara','Gadaa','Hijra','Shabelle','Global','Siinqee','Telebirr','e-Birr','CBE Birr','M-Pesa','Kacha','Other'];
-const day=t=>{const d=new Date(t);d.setHours(0,0,0,0);return d.getTime()};
-const ds=t=>{const x=new Date(t);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
-const money=n=>Math.round(n).toLocaleString()+(LG=='en'?' Birr':' ብር');
-const priv=n=>hide?'•••• ':money(n);
-const tm=t=>new Date(t).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-const cls=i=>i.qty<=i.re?'rd':i.qty<=i.re*1.5?'or':'gn';
-const dl=e=>Math.ceil((new Date(e)-Date.now())/864e5);
-const minE=()=>ds(Date.now()+90*864e5);
-const un=id=>(S.users.find(u=>u.id==id)||{}).name||'?';
-const cpd=s=>S.cp.filter(p=>p.sid==s.id).reduce((x,p)=>x+p.amt,0);
-const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
-function seed(){let r=7;const R=n=>((r=(r*9301+49297)%233280)/233280*n)|0,D_=n=>ds(Date.now()+n*864e5);
-const items=[['ስኳር Sugar 1kg',62,75,40,10,'',''],['ዘይት Oil 1L',150,175,6,10,'',''],['ሩዝ Rice 1kg',95,115,25,8,'',''],['ፓስታ Pasta',38,48,30,10,'',''],['ሳሙና Soap',22,30,14,12,'',''],['ውሃ Water 1.5L',18,25,48,20,'',''],['ዳቦ Bread',8,12,13,10,D_(5),'B-07'],['ወተት Milk 1L',70,85,9,8,D_(45),'M-221'],['ጨው Salt 1kg',20,28,22,8,'',''],['ሻይ ቅጠል Tea',55,70,12,6,D_(200),'T-10']].map((a,i)=>({id:i+1,n:a[0],cost:a[1],price:a[2],qty:a[3],re:a[4],e:a[5],b:a[6]}));
-const sales=[],t0=day(Date.now());
-for(let d=6;d>=0;d--)for(let i=0;i<5;i++){const it=items[R(items.length)],q=1+R(4),tot=q*it.price,m=R(3)==0?tot:0;sales.push({id:sales.length+1,t:t0-d*864e5+(8+i*2)*36e5,u:R(3)?3:2,lines:[{i:it.id,n:it.n,q,p:it.price,c:it.cost}],tot,pay:{cash:tot-m,mob:m,cr:0,bank:m?'Telebirr':''}})}
-sales.push({id:99,t:Date.now()-36e5,u:3,cust:'Almaz',lines:[{i:1,n:items[0].n,q:2,p:75,c:62}],tot:150,pay:{cash:0,mob:0,cr:150,bank:''}});
-const q={q1:SQ[0],a1:'test',q2:SQ[1],a2:'test'};
-return{base:0,exp:[],cp:[],lang:'en',users:[{id:1,name:'Tesfalem',role:'owner',pin:'Tesfa1',on:1,...q},{id:2,name:'Mulu',role:'manager',pin:'Mulu3',on:1,...q},{id:3,name:'Abel',role:'cashier',pin:'Abel2',on:1,...q}],items,sales,sup:[{id:1,n:'Adama Wholesale',d:D_(-3),tot:12000,paid:8000}],log:[]}}
-try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
-if(!S)S=seed();LG=S.lang||'en';
-function agg(a,b){const r={s:0,k:0,cash:0,mob:0,cr:0,co:0,cc:0,d:0};S.sales.forEach(s=>{if(s.t>=a&&s.t<b){r.d+=s.lines.reduce((x,l)=>x+((l.o||l.p)-l.p)*l.q,0);r.s+=s.tot;r.k+=s.lines.reduce((x,l)=>x+l.c*l.q,0);r.cash+=s.pay.cash;r.mob+=s.pay.mob;r.cr+=s.pay.cr||0;r.co+=s.co||0}});S.cp.forEach(p=>{if(p.t>=a&&p.t<b){r.cc+=p.amt;if(p.m=='Cash')r.cash+=p.amt;else r.mob+=p.amt}});return r}
-const drawer=()=>S.sales.reduce((x,s)=>x+s.pay.cash,0)+S.cp.filter(p=>p.m=='Cash').reduce((x,p)=>x+p.amt,0)-S.exp.reduce((x,e)=>x+e.amt,0);
 
-const N={sell:['🛒'],home:['🏠'],mine:['🧾'],stock:['📦'],sup:['🚚'],cred:['💳'],rep:['📊'],admin:['🗂']};
-const NL={sell:'Sell',home:'Home',mine:'My sales',stock:'Items',sup:'Suppliers',cred:'Credit',rep:'Report',admin:'Admin'};
-const R_={owner:['home','sell','mine','stock','cred','sup','rep','admin'],manager:['home','sell','mine','stock','cred','sup','rep'],cashier:['sell','mine','stock','cred']};
-const lsel=sm=>`<select ${sm?'':'class=in style="max-width:200px"'} onchange=setL(this.value)>${[['en','English','EN'],['am','አማርኛ','አማ'],['om','Afaan Oromo','Afaan']].map(a=>`<option value=${a[0]} ${a[0]==LG?'selected':''}>${sm?a[2]:a[1]}</option>`).join('')}</select>`;
-function setL(v){LG=v;S.lang=v;save();render()}
+// ==========================================
+// 3. UI RENDER ROUTINE
+// ==========================================
+const $ = s => document.querySelector(s);
 
-function render(){const r=$('#root');
-if(!U){r.innerHTML=`<div class=lgx><aside class=lgb><div class=badge><img src="data:image/png;base64,...">...</div>`;}
+function render() {
+  const root = $('#root');
+  if (!currentUser) {
+    root.innerHTML = `
+      <div class="lg">
+        <h1>ቂንዴ Qindee</h1>
+        <p style="color:var(--m);font-size:13px;margin-bottom:16px">ሱቅዎን በተደራጀ መንገድ ያስተዳድሩ</p>
+        <div style="text-align:left">
+          <label>Shop Name</label>
+          <input id="regShop" class="in" placeholder="e.g. Kanem Drug Store">
+          <label>Owner Name</label>
+          <input id="regName" class="in" placeholder="e.g. Dr. Tesfalem">
+          <label>Phone Number</label>
+          <input id="regPhone" class="in" placeholder="09xxxxxxxx">
+          <label>PIN Code (Password)</label>
+          <input id="regPin" type="password" class="in" placeholder="4+ characters">
+          <button class="bp" onclick="handleRegister()">Register & Start Cloud POS</button>
+        </div>
+      </div>
+    `;
+  } else {
+    root.innerHTML = `
+      <div class="app">
+        <header>
+          <b>ቂንዴ Qindee (Cloud Connected)</b>
+          <span>Welcome, ${currentUser.name}</span>
+        </header>
+        <main>
+          <h3>Dashboard</h3>
+          <p class="ok">Successfully connected to Supabase Cloud Database!</p>
+        </main>
+      </div>
+    `;
+  }
 }
+
+async function handleRegister() {
+  const shopName = $('#regShop').value.trim();
+  const name = $('#regName').value.trim();
+  const phone = $('#regPhone').value.trim();
+  const pin = $('#regPin').value.trim();
+
+  if (!shopName || !name || !phone || !pin) {
+    alert('Please fill in all fields.');
+    return;
+  }
+
+  alert('Registering shop in cloud...');
+  const res = await registerShopAndOwner(shopName, name, phone, pin);
+  if (res) {
+    alert('Shop registered successfully!');
+  }
+}
+
+// Initial render call on load
+window.onload = () => {
+  render();
+};
 </script>
 </body>
 </html>
