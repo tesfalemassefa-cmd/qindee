@@ -1,11 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
+<html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ቂንዴ Qindee</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--g:#0b5d2e;--o:#f28c1b;--s:#f4f8f4;--t:#1b2a20;--m:#6b7a70;--b:#dfe6e0;--r:#d93025;--gr:#1e8e3e;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html,body{height:100%;margin:0;overflow:hidden;background:#fff}
@@ -38,221 +34,119 @@ h3{margin:16px 0 8px}
 .kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
 .k{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:12px}
 .k b{display:block;font-size:19px;color:var(--g);margin:2px 0}
-.pill{padding:3px 10px;border-radius:99px;color:#fff;font-size:13px}
-.pill.rd{background:var(--r)}.pill.or{background:var(--o)}.pill.gn{background:var(--gr)}
+.bars{display:flex;gap:4px;height:120px;background:var(--s);border-radius:12px;padding:10px 10px 4px}
+.bc{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.bc i{display:block;width:100%;background:linear-gradient(var(--o),var(--g));border-radius:4px 4px 0 0;min-height:2px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.bc small{font-size:9px;color:var(--m);margin-top:3px}
+.pill{padding:3px 10px;border-radius:99px;color:#fff;font-size:13px;-webkit-print-color-adjust:exact}
+.pill.rd{background:var(--r);color:#fff}.pill.or{background:var(--o);color:#fff}.pill.gn{background:var(--gr);color:#fff}
 .rd{color:var(--r)}.or{color:var(--o)}.gn{color:var(--gr)}
+.qt{display:flex;align-items:center;gap:6px}
+.qt button{width:34px;height:34px;border:1px solid var(--g);border-radius:8px;background:#fff;color:var(--g);font-size:18px;font-weight:700;padding:0}
+.tot{font-size:18px;font-weight:700;text-align:right;margin:10px 0}
+.warn{background:#fff3cd;color:#664d03;padding:8px;border-radius:8px;margin-bottom:8px}
+.ok{color:var(--gr);font-weight:700;text-align:center}
 .ov{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
 .md{background:#fff;border-radius:14px;padding:16px;width:100%;max-width:380px;max-height:100%;overflow:auto}
 .md label,.lb{display:block;font-size:13px;color:var(--m);margin-top:6px}
+.lg{max-width:360px;margin:3vh auto 0;padding:16px;text-align:center;overflow:auto;max-height:100%}
+.lg p{color:#000;margin:6px 0}
+.lg .box{border:1px solid var(--b);border-radius:16px;padding:16px;text-align:left}
+.lg h1{color:var(--g);margin:0}
 table{width:100%;border-collapse:collapse;font-size:11px}
 td,th{border-bottom:1px solid var(--b);padding:5px 2px;text-align:right}
 td:first-child,th:first-child{text-align:left}
-
-/* Login Screen Split Layout Styles */
-.lgx{display:flex;flex-direction:column;height:100dvh;overflow:auto;background:#fff}
-.lgb{background:var(--g);color:#fff;padding:24px;display:flex;flex-direction:column;justify-content:space-between}
-.lgc{padding:24px;flex:1;max-width:480px;margin:0 auto;width:100%;display:flex;flex-direction:column;justify-content:center}
-@media(min-width:768px){.lgx{flex-direction:row}.lgb{width:45%;max-width:460px}.lgc{flex:1}}
-.badge{background:#fff2;padding:6px 12px;border-radius:8px;font-size:12px;width:fit-content;margin-bottom:16px}
+#rp{position:fixed;inset:0;background:#fff;overflow:auto;padding:16px;z-index:20}
+@media print{html,body{overflow:visible;height:auto}#root{display:none}#rp{position:static;overflow:visible}.np{display:none!important}}
 </style>
-</head>
-<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head><body>
 <div id="root"></div>
-
 <script>
-// ==========================================
-// 1. SUPABASE INITIALIZATION
-// ==========================================
-const SUPABASE_URL = 'https://ktcvwmjjnxdamzecfaxq.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_BCjwtGD7bSzQNjVyc6czTg_974UL0z-';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-let currentShopId = null;
-let currentUser = null;
-let LG = 'en';
-let authMode = 'login'; // 'login' or 'register'
-
-// Translations Dictionary
-const D={'Sell':['ሽያጭ','Gurgurtaa'],'Home':['መነሻ','Fuula jalqabaa'],'Items':['ዕቃ','Meeshaalee'],'Sign in':['ግባ','Seeni'],'Log out':['ውጣ','Ba’i'],'Password (4+ characters, case-sensitive)':['የይለፍ ቃል (4+ ፊደላት፣ ትልቅ/ትንሽ ይለያል)','Jecha iccitii (mallattoolee yoo xiqqaate 4; qubee gurguddaa fi xixiqqaan adda)'],'Create account - 1 month free':['አካውንት ክፈት - 1 ወር ነጻ','Herrega banadhu - ji’a 1 bilisa']};
+const D={'Sell':['ሽያጭ','Gurgurtaa'],'Home':['መነሻ','Fuula jalqabaa'],'My sales':['የኔ ሽያጭ','Gurgurtaa koo'],'Items':['ዕቃ','Meeshaalee'],'Suppliers':['አቅራቢ','Dhiyeessitoota'],'Credit':['ዱቤ','Liqii'],'Report':['ሪፖርት','Gabaasa'],'Activity':['እንቅስቃሴ','Sochii'],'Staff':['ሰራተኛ','Hojjettoota'],'Shop and Mini Market Management':['የሱቅ እና ሚኒ ማርኬት አስተዳደር','Bulchiinsa Suuqii fi Suuqii Xixiqqoo'],'Sign in':['ግባ','Seeni'],'Log out':['ውጣ','Ba’i'],'Password (4+ characters, case-sensitive)':['የይለፍ ቃል (4+ ፊደላት፣ ትልቅ/ትንሽ ይለያል)','Jecha iccitii (mallattoolee yoo xiqqaate 4; qubee gurguddaa fi xixiqqaan adda)'],'Forgot password?':['የይለፍ ቃል ረሱ?','Jecha iccitii irraانfatte?'],'Wrong password':['የተሳሳተ የይለፍ ቃል','Jecha iccitii sirrii miti'],'Today sales':['የዛሬ ሽያጭ','Gurgurtaa har’aa'],'Profit':['ትርፍ','Bu’aa'],'All-time sales':['ጠቅላላ ሽያጭ','Gurgurtaa waliigalaa'],'Reset / Renew':['እንደገና ጀምር','Irra deebi’ii qindeessi'],'Low stock':['ዝቅተኛ ክምችት','Kuusaa xiqqaate'],'Expiring (3 months)':['የሚያልፍባቸው (3 ወር)','Meeshaalee ji’a 3 keessatti yeroon itti dhumu'],'7 most sold':['7 በብዛት የተሸጡ','Meeshaalee baay’inaan gurguraman 7'],'Cart':['ጋሪ','Meeshaalee bittaa filataman'],'Empty':['ባዶ','Duwwaa'],'Total':['ድምር','Waliigala'],'Cash':['ጥሬ','Maallaqa callaa'],'Mobile':['ሞባይል','Mobaayilii'],'Mixed':['ድብልቅ','Makaa'],'Select bank':['ባንክ ይምረጡ','Baankii filadhu'],'Customer name':['የደንበኛ ስም','Maqaa maamilaa'],'Cash part':['የጥሬ ክፍል','Qooda maallaqa callaa'],'Cash given to customer':['ለደንበኛ የተሰጠ ጥሬ ብር','Maallaqa callaa maamilaaf deebifamu'],'Complete':['ጨርስ','Xumuri'],'Saved':['ተመዝግቧል','Olkaa’ameera'],'New item':['አዲስ ዕቃ','Meeshaa haaraa'],'Name':['ስም','Maqaa'],'Cost':['የተገዛበት ዋጋ','Gatii bitannaa'],'Selling price':['መሸጫ ዋጋ','Gatii gurgurtaa'],'Quantity':['ብዛት','Baay’ina'],'Low-stock alert qty':['ዝቅተኛ ክምችት ማንቂያ','Baay’ina akeekkachiisa kuusaa xiqqaa'],'Expiry date (optional)':['የሚያልፍበት ቀን (አማራጭ)','Guyyaa itti dhumu (dirqama miti)'],'Batch no. (optional)':['ባች ቁጥር (አማራጭ)','Lakkoofsa tuuta oomishaa (dirqama miti)'],'Restock (add qty)':['ክምችት ጨምር','Kuusaa irratti dabali'],'Import from Excel':['ከኤክሴል አስገባ','Excel irraa galchi'],'Search':['ፈልግ','Barbaadi'],'Total unpaid':['ጠቅላላ ያልተከፈለ','Waliigala kaffaltii hin raawwatamne'],'New record':['አዲስ መዝገብ','Galmee haaraa'],'Records':['መዝገብ','Galmeewwan'],'Supplier':['አቅራቢ','Dhiyeessaa'],'Date':['ቀን','Guyyaa'],'Paid':['የተከፈለ','Kaffalameera'],'Unpaid':['ያልተከፈለ','Hin kaffalamne'],'Mark paid':['ተከፍሏል','Kaffalameera'],'Full':['ሙሉ','Guutuu'],'Partial':['ከፊል','Gartokkee'],'Amount':['መጠን','Hamma maallaqaa'],'Method':['መንገድ','Mala kaffaltii'],'Cancel':['ተው','Haqi'],'OK':['እሺ','Tole'],'Close':['ዝጋ','Cufi'],'PDF Export':['PDF ላክ','PDFtti galchi'],'Expense':['ወጪ','Baasii'],'Expenses':['ወጪ','Baasiilee'],'Sales':['ሽያጭ','Gurgurtaa'],'Filtered Range Sales':['የተመረጠ ጊዜ ሽያጭ','Gurgurtaa yeroo filatame keessatti'],'Multi-Day Range Report':['የብዙ ቀን ሪፖርት','Gabaasa guyyoota hedduu'],'Daily Expense Record':['የዕለት ወጪ መዝገብ','Galmee baasii guyyaa'],'Balance Sheet':['ሚዛን','Gabaasa madaallii maallaqaa'],'Quick check':['ፈጣን ምርመራ','Sakatta’iinsa saffisaa'],'Cash in drawer':['በሳጥን ያለ ጥሬ ብር','Maallaqa callaa saanduqa keessa jiru'],'Check now':['አሁን እይ','Amma sakatta’i'],'Item Sales Audit':['የዕቃ ሽያጭ ምርመራ','Sakatta’iinsa gurgurtaa meeshaalee'],'Activity Search':['እንቅስቃሴ ፍለጋ','Barbaacha sochiiwwanii'],'Add worker':['ሰራተኛ ጨምር','Hojjetaa dabali'],'Reset password':['የይለፍ ቃል ቀይር','Jecha iccitii irra deebi’ii qindeessi'],'Customer':['ደንበኛ','Maamila'],'Show':['አሳይ','Agarsiisi'],'Admin':['አስተዳደር','Bulchiinsa'],'Reminders':['ማስታወሻዎች','Yaadachiisota'],'Documents':['ሰነዶች','Sanadoota'],'Day':['ቀን','Guyyaa'],'Week':['ሳምንት','Torban'],'Month':['ወር','Ji’a'],'Quarter':['ሩብ ዓመት','Kurmaana'],'6 months':['6 ወር','Ji’a 6'],'Year':['ዓመት','Waggaa'],'Custom':['ብጁ','Yeroo ofii filadhu']};
+const SQ=['First name of your mother?','Name of the town you were born in?','Name of your first school?','Name of your first pet?','Name of your best childhood friend?'];
+const $=s=>document.querySelector(s),K='suke3';
+let S,U=null,V='sell',L=()=>{},cart=[],late=false,hide=true,RG=null,LG='en';
 const T=k=>{const d=D[k];return d&&LG!='en'?(d[LG=='am'?0:1]||k):k};
-const lsel=sm=>`<select class=in style="max-width:140px;background:#fff;color:#000" onchange="setL(this.value)">${[['en','English','EN'],['am','አማርኛ','አማ'],['om','Afaan Oromo','Afaan']].map(a=>`<option value=${a[0]} ${a[0]==LG?'selected':''}>${sm?a[2]:a[1]}</option>`).join('')}</select>`;
-function setL(v){LG=v;render();}
+const P0=()=>({m:'cash',b:'',c:0,cust:'',co:0});let pay=P0();
+const BK=['CBE','Awash','BOA','Dashen','Wegagen','Nib','Hibret','Zemen','Abay','Oromia','Coop','Enat','Bunna','Berhan','Lion','Tsedey','Sidama','Zamzam','Ahadu','Amhara','Gadaa','Hijra','Shabelle','Global','Siinqee','Telebirr','e-Birr','CBE Birr','M-Pesa','Kacha','Other'];
+const day=t=>{const d=new Date(t);d.setHours(0,0,0,0);return d.getTime()};
+const ds=t=>{const x=new Date(t);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
+const money=n=>Math.round(n).toLocaleString()+(LG=='en'?' Birr':' ብር');
+const priv=n=>hide?'•••• ':money(n);
+const tm=t=>new Date(t).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+const cls=i=>i.qty<=i.re?'rd':i.qty<=i.re*1.5?'or':'gn';
+const dl=e=>Math.ceil((new Date(e)-Date.now())/864e5);
+const minE=()=>ds(Date.now()+90*864e5);
+const un=id=>(S.users.find(u=>u.id==id)||{}).name||'?';
+const cpd=s=>S.cp.filter(p=>p.sid==s.id).reduce((x,p)=>x+p.amt,0);
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+function seed(){let r=7;const R=n=>((r=(r*9301+49297)%233280)/233280*n)|0,D_=n=>ds(Date.now()+n*864e5);
+const items=[['ስኳር Sugar 1kg',62,75,40,10,'',''],['ዘይት Oil 1L',150,175,6,10,'',''],['ሩዝ Rice 1kg',95,115,25,8,'',''],['ፓስታ Pasta',38,48,30,10,'',''],['ሳሙና Soap',22,30,14,12,'',''],['ውሃ Water 1.5L',18,25,48,20,'',''],['ዳቦ Bread',8,12,13,10,D_(5),'B-07'],['ወተት Milk 1L',70,85,9,8,D_(45),'M-221'],['ጨው Salt 1kg',20,28,22,8,'',''],['ሻይ ቅጠል Tea',55,70,12,6,D_(200),'T-10']].map((a,i)=>({id:i+1,n:a[0],cost:a[1],price:a[2],qty:a[3],re:a[4],e:a[5],b:a[6]}));
+const sales=[],t0=day(Date.now());
+for(let d=6;d>=0;d--)for(let i=0;i<5;i++){const it=items[R(items.length)],q=1+R(4),tot=q*it.price,m=R(3)==0?tot:0;sales.push({id:sales.length+1,t:t0-d*864e5+(8+i*2)*36e5,u:R(3)?3:2,lines:[{i:it.id,n:it.n,q,p:it.price,c:it.cost}],tot,pay:{cash:tot-m,mob:m,cr:0,bank:m?'Telebirr':''}})}
+sales.push({id:99,t:Date.now()-36e5,u:3,cust:'Almaz',lines:[{i:1,n:items[0].n,q:2,p:75,c:62}],tot:150,pay:{cash:0,mob:0,cr:150,bank:''}});
+const q={q1:SQ[0],a1:'test',q2:SQ[1],a2:'test'};
+return{base:0,exp:[],cp:[],lang:'en',users:[{id:1,name:'Tesfalem',role:'owner',pin:'Tesfa1',on:1,...q},{id:2,name:'Mulu',role:'manager',pin:'Mulu3',on:1,...q},{id:3,name:'Abel',role:'cashier',pin:'Abel2',on:1,...q}],items,sales,sup:[{id:1,n:'Adama Wholesale',d:D_(-3),tot:12000,paid:8000}],log:[]}}
+try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
+if(!S)S=seed();LG=S.lang||'en';
+function agg(a,b){const r={s:0,k:0,cash:0,mob:0,cr:0,co:0,cc:0,d:0};S.sales.forEach(s=>{if(s.t>=a&&s.t<b){r.d+=s.lines.reduce((x,l)=>x+((l.o||l.p)-l.p)*l.q,0);r.s+=s.tot;r.k+=s.lines.reduce((x,l)=>x+l.c*l.q,0);r.cash+=s.pay.cash;r.mob+=s.pay.mob;r.cr+=s.pay.cr||0;r.co+=s.co||0}});S.cp.forEach(p=>{if(p.t>=a&&p.t<b){r.cc+=p.amt;if(p.m=='Cash')r.cash+=p.amt;else r.mob+=p.amt}});return r}
+const drawer=()=>S.sales.reduce((x,s)=>x+s.pay.cash,0)+S.cp.filter(p=>p.m=='Cash').reduce((x,p)=>x+p.amt,0)-S.exp.reduce((x,e)=>x+e.amt,0);
 
-// ==========================================
-// 2. CORE CLOUD FUNCTIONS
-// ==========================================
-async function loadItems() {
-  if (!currentShopId) return [];
-  const { data, error } = await supabaseClient.from('items').select('*').eq('shop_id', currentShopId);
-  return error ? [] : (data || []);
-}
+const N={sell:['🛒'],home:['🏠'],mine:['🧾'],stock:['📦'],sup:['🚚'],cred:['💳'],rep:['📊'],admin:['🗂']};
+const NL={sell:'Sell',home:'Home',mine:'My sales',stock:'Items',sup:'Suppliers',cred:'Credit',rep:'Report',admin:'Admin'};
+const R_={owner:['home','sell','mine','stock','cred','sup','rep','admin'],manager:['home','sell','mine','stock','cred','sup','rep'],cashier:['sell','mine','stock','cred']};
+const lsel=sm=>`<select ${sm?'':'class=in style="max-width:200px"'} onchange=setL(this.value)>${[['en','English','EN'],['am','አማርኛ','አማ'],['om','Afaan Oromo','Afaan']].map(a=>`<option value=${a[0]} ${a[0]==LG?'selected':''}>${sm?a[2]:a[1]}</option>`).join('')}</select>`;
+function setL(v){LG=v;S.lang=v;save();render()}
 
-async function loginUser(phone, pin) {
-  const { data, error } = await supabaseClient
-    .from('users')
-    .select('*, shops(*)')
-    .eq('phone', phone)
-    .eq('pin', pin)
-    .single();
+function render(){const r=$('#root');
+if(!U){r.innerHTML=`<div class=lg><div class=box><h1>ቂንዴ Qindee</h1><p>${T('Shop and Mini Market Management')}</p><label>${T('Sign in')}</label><input id=lu class=in value="0911000001"><input id=lp class=in type=password placeholder="${T('Password (4+ characters, case-sensitive)')}"><div class=rd id=le style="min-height:20px"></div><button class=bp onclick=login()>${T('Sign in')}</button><div style="text-align:right;margin-top:6px"><button class=lnk style="background:none;border:0;color:var(--g);cursor:pointer;padding:0" onclick=forgot()>${T('Forgot password?')}</button></div></div>${lsel()}</div>`;return}
+r.innerHTML=`<div class=app><div class=top><nav>${R_[U.role].map(k=>`<button class="${k==V?'act':''}" onclick="go('${k}')"><span>${N[k][0]}</span>${k=='mine'&&U.role!='cashier'?T('Sales'):T(NL[k])}</button>`).join('')}</nav><div class=mw><header><b>🛒 ቂንዴ Qindee</b><span class=hr><span class=un>${U.name}</span>${lsel(1)}<button onclick=eye()>${hide?'🙈':'👁'}</button><button onclick=out()>⏻</button></span></header><main id=m></main></div></div><footer>@Tesfacare 2026</footer></div>`;views[V]()}
+const go=v=>{if(v=='staff'||v=='act'){AT=v;v='admin'}V=v;render()},eye=()=>{hide=!hide;render()};
+function login(){const u=S.users.find(x=>x.id==$('#lu').value);if(!u||u.pin!==$('#lp').value){$('#le').textContent=T('Wrong password');return}
+U=u;hide=true;V='sell';S.log.push({name:u.name,a:'in',t:Date.now()});save();render()}
+function out(){S.log.push({name:U.name,a:'out',t:Date.now()});save();U=null;cart=[];render()}
+function forgot(){const u=S.users.find(x=>x.id==$('#lu').value);if(!u)return;
+modal(T('Forgot password?'),[{k:'a1',l:u.q1},{k:'a2',l:u.q2},{k:'np',l:'New password (4+)'}],v=>{const n=s=>s.trim().toLowerCase();if(n(v.a1)!=n(u.a1)||n(v.a2)!=n(u.a2))return 'Wrong answers';if(v.np.length<4)return 'Password too short';u.pin=v.np;save();return 1})}
+function modal(t,f,ok){const d=document.createElement('div');d.className='ov';
+d.innerHTML=`<div class=md><h3 style="margin-top:0">${t}</h3>${f.map(x=>`<label>${x.l}${x.o?`<select id=f_${x.k}>${x.o.map(o=>`<option ${o==x.v?'selected':''}>${o}</option>`).join('')}</select>`:`<input class=in id=f_${x.k} type="${x.t||'text'}" value="${x.v??''}">`}</label>`).join('')}<div class=rd id=er style="min-height:18px"></div><div class=row><button class=bt id=no>${T('Cancel')}</button><button class=bt style="background:var(--g);color:#fff" id=ok>${T('OK')}</button></div></div>`;
+document.body.appendChild(d);d.querySelector('#no').onclick=()=>d.remove();
+d.querySelector('#ok').onclick=()=>{const v={};f.forEach(x=>v[x.k]=d.querySelector('#f_'+x.k).value);const r=ok(v);if(typeof r=='string')d.querySelector('#er').textContent=r;else if(r!==false)d.remove()}}
+function notice(h){const d=document.createElement('div');d.className='ov';d.innerHTML=`<div class=md>${h}<button class=bp id=c>${T('OK')}</button></div>`;document.body.appendChild(d);d.querySelector('#c').onclick=()=>d.remove()}
+const W=()=>$('#sub')\vert{}\vert{}$('#m');function page(h,fn){W().innerHTML=h+`<input id=q class=in placeholder="🔍 ${T('Search')}" oninput=L()><div id=lst></div>`;L=()=>{$('#lst').innerHTML=fn($('#q').value.toLowerCase())};L()}
+const row=(l,v,c)=>`<div class=ln><span>${l}</span><b class="${c||''}">${v}</b></div>`;
 
-  if (error || !data) {
-    alert('Invalid phone number or PIN.');
-    return false;
-  }
+const views={
+home(){const t0=day(Date.now()),a=agg(t0,t0+864e5),all=agg(S.base,9e15),q={};
+S.sales.forEach(s=>{if(s.t>=S.base)s.lines.forEach(l=>q[l.i]=(q[l.i]||0)+l.q)});
+const rk=S.items.map(i=>({n:i.n,q:q[i.id]||0})).sort((x,y)=>y.q-x.q),
+low=S.items.filter(i=>i.qty<=i.re*1.5).sort((x,y)=>x.qty/x.re-y.qty/y.re),
+ex=S.items.filter(i=>i.e&&dl(i.e)<=90).sort((x,y)=>x.e<y.e?-1:1);
+$('#m').innerHTML=`<div class=kp><div class=k><small>${T('Today sales')}</small><b>${priv(a.s)}</b></div><div class=k><small>${T('Profit')}</small><b>${priv(a.s-a.k)}</b></div><div class=k><small>${T('All-time sales')} (${S.base?ds(S.base):'—'})</small><b>${priv(all.s)}</b>${U.role=='owner'?`<button class=bt style="width:100%" onclick=rst()>↻ ${T('Reset / Renew')}</button>`:''}</div></div>
+<h3>⚠️ ${T('Low stock')}</h3>${low.map(i=>row(i.n,`<span class="pill ${cls(i)}">${i.qty}</span>`)).join('')||'<p class=mu>OK</p>'}
+<h3>⏳ ${T('Expiring (3 months)')}</h3>${ex.map(i=>row(i.n+' <small>'+i.e+'</small>',dl(i.e)<0?'Expired':dl(i.e)+' d',dl(i.e)<30?'rd':'or')).join('')||'<p class=mu>OK</p>'}
+<h3>🔥 ${T('7 most sold')}</h3>${rk.slice(0,7).map(x=>row(x.n,x.q,'gn')).join('')}`},
+sell(){page('',q=>'<div class=grid>'+S.items.filter(i=>i.n.toLowerCase().includes(q)).map(i=>`<button class=card onclick=add(${i.id})><b>${i.n}</b><span>${i.price}</span><small class="${cls(i)}">${i.qty}</small></button>`).join('')+'</div>');
+$('#m').insertAdjacentHTML('beforeend',`<h3>🛒 ${T('Cart')}</h3><div id=cart></div>`);cartV()},
+mine(){const t0=day(Date.now()),rows=S.sales.filter(s=>s.u==U.id&&s.t>=t0).flatMap(s=>s.lines.map(l=>({t:s.t,n:l.n,q:l.q}))).reverse();
+page('',q=>rows.filter(x=>x.n.toLowerCase().includes(q)).map(x=>`<div class=ln><span>${x.n}<br><small>${tm(x.t)}</small></span><b>× ${x.q}</b></div>`).join('')||'<p class=mu>—</p>')},
+stock(){const can=U.role!='cashier';
+page(can?`<div class=row><button class=bp onclick=addI()>+ ${T('New item')}</button><button class=bp style="background:var(--o)" onclick="$('#xf').click()">📥 ${T('Import from Excel')}</button></div><input id=xf type=file accept=".xlsx,.xls,.csv" hidden onchange=imp(this.files[0])>`:'',q=>S.items.filter(i=>i.n.toLowerCase().includes(q)).map(i=>`<div class=ln ${can?`onclick=edI(${i.id})`:''}><span>${i.n}<br><small>${can?T('Cost')+' '+i.cost+' · ':''}${T('Selling price')} ${i.price}${i.b?' · '+i.b:''}${i.e?' · exp '+i.e:''}</small>${i.e&&dl(i.e)<=90?` <b class="pill ${dl(i.e)<30?'rd':'or'}">exp ${dl(i.e)}d</b>`:''}</span><b class="pill ${cls(i)}">${i.qty}</b></div>`).join(''))},
+sup(){const u_=S.sup.reduce((x,s)=>x+s.tot-s.paid,0);
+page(`<div class=k style="margin-bottom:8px"><small>${T('Total unpaid')}</small><b class=rd>${priv(u_)}</b></div><button class=bp onclick=addS()>+ ${T('New record')}</button><h3 style="margin-top:4px">${T('Records')}</h3>`,q=>S.sup.filter(s=>s.n.toLowerCase().includes(q)).slice().reverse().map(s=>{const r=s.tot-s.paid;return `<div class=ln><span>${s.n}<br><small>${s.d} · ${priv(s.tot)}</small></span><span style="text-align:right"><b class="${r>0?'rd':'gn'}">${r>0?T('Unpaid')+' '+priv(r):'✔ '+T('Paid')}</b><br><small>${T('Paid')} ${priv(s.paid)}</small></span>${r>0?`<button class=bt style="flex:none" onclick=spay(${s.id})>${T('Mark paid')}</button>`:''}</div>`}).join(''))},
+cred(){page('',q=>{const cs=S.sales.filter(s=>s.pay.cr&&(s.cust||'').toLowerCase().includes(q));if(!cs.length)return '<p class=mu>—</p>';const g={};cs.forEach(s=>(g[s.cust]=g[s.cust]||[]).push(s));
+return Object.entries(g).map(([c,a])=>{const tot=a.reduce((x,s)=>x+s.pay.cr,0),pd=a.reduce((x,s)=>x+cpd(s),0);
+return `<div class=k style="margin:8px 0"><b style="color:var(--t)">${c}</b><small>${T('Total')} ${money(tot)} · ${T('Paid')} <span class=gn>${money(pd)}</span> · ${T('Unpaid')} <span class=rd>${money(tot-pd)}</span></small>${a.slice().reverse().map(s=>{const r=s.pay.cr-cpd(s);return `<div class=ln style="background:#fff"><span>${ds(s.t)}<br><small>${s.lines.map(l=>l.n+' ×'+l.q).join(', ')}</small><br><small class=gn>${S.cp.filter(p=>p.sid==s.id).map(p=>ds(p.t)+': '+money(p.amt)+' ('+p.m+')'+(p.u?' · '+un(p.u):'')+(U.role!='cashier'?` <a onclick=cpx(${p.id}) style="color:var(--r)">↩</a>`:'')).join(' · ')}</small></span><span style="text-align:right">${money(s.pay.cr)}<br><b class="${r>0?'rd':'gn'}">${r>0?T('Unpaid')+' '+money(r):'✔ '+T('Paid')}</b></span>${r>0?`<button class=bt style="flex:none" onclick=cpay(${s.id})>${T('Mark paid')}</button>`:''}</div>`}).join('')}</div>`}).join('')})},
+rep(){RG=RG||{f:ds(Date.now()),t:ds(Date.now())};
+$('#m').innerHTML=`<div class=row><input type=date class=in value="${RG.f}" onchange="RG.f=this.value;rb()"><input type=date class=in value="${RG.t}" onchange="RG.t=this.value;rb()"></div><div class=row><button class=bp onclick=pdf()>📄 ${T('PDF Export')}</button><button class=bp style="background:var(--o)" onclick=addE()>+ ${T('Expense')}</button></div><div id=rb></div>`;rb()},
+act(){W().innerHTML=`<h3 style="margin-top:0">⚡ ${T('Quick check')}</h3><div class=k><small>💵 ${T('Cash in drawer')}</small><b id=dc>••••</b><button class=bt style="width:100%" onclick="$('#dc').textContent=money(drawer())">${T('Check now')}</button></div>
+<h3>🔎 ${T('Item Sales Audit')}</h3><input id=ci class=in list=dl placeholder="Item (empty = all)"><datalist id=dl>${S.items.map(i=>`<option value="${i.n}">`).join('')}</datalist><div class=row><input id=cf type=date class=in value="${ds(Date.now())}"><input id=ct type=date class=in value="${ds(Date.now())}"></div><button class=bp onclick=runC()>${T('Show')}</button><div id=res></div>
+<h3>🕒 ${T('Activity Search')}</h3><input id=q class=in placeholder="🔍 ${T('Search')}" oninput=L()><div id=lst></div>`;
+const ev=[...S.log.map(x=>({n:x.name,t:x.t,x:x.a=='in'?'✔ In':'↩ Out'})),...S.cp.map(p=>({n:p.u?un(p.u):'?',t:p.t,x:'💳 Credit paid '+money(p.amt)+' ('+p.m+')'})),...S.sales.map(s=>({n:un(s.u),t:s.t,x:'🛒 '+s.lines.map(l=>l.n+' ×'+l.q).join(', ')}))].sort((a,b)=>b.t-a.t);
+L=()=>{const q=$('#q').value.toLowerCase();$('#lst').innerHTML=ev.filter(e=>(e.n+e.x).toLowerCase().includes(q)).slice(0,60).map(e=>`<div class=ln><span>${e.n}<br><small>${e.x}</small></span><small>${tm(e.t)}</small></div>`).join('')};L()},
+staff(){page(`<button class=bp onclick=addU()>+ ${T('Add worker')}</button>`,q=>S.users.filter(u=>u.name.toLowerCase().includes(q)).map(u=>`<div class=ln><span>${u.name}<br><small>${u.role} · ${u.ph||''}</small></span><span class=qt><button class=bt style="width:auto;font-size:12px;color:var(--t);font-weight:400;padding:6px" onclick=rpw(${u.id})>🔑 ${T('Reset password')}</button>${u.role=='owner'?'':`<button class=bt style="width:auto;font-size:12px;color:var(--t);font-weight:400;padding:6px" onclick=tog(${u.id})>${u.on?'✔':'✖'}</button>`}</span></div>`).join(''))}
+};
 
-  currentUser = data;
-  currentShopId = data.shop_id;
-  render();
-  return true;
-}
-
-async function registerShopAndOwner(shopName, ownerName, ownerPhone, ownerPin) {
-  const { data: shopData, error: shopError } = await supabaseClient
-    .from('shops')
-    .insert([{ name: shopName, plan: 'trial' }])
-    .select()
-    .single();
-
-  if (shopError) {
-    alert('Shop registration failed.');
-    return null;
-  }
-
-  const { data: userData, error: userError } = await supabaseClient
-    .from('users')
-    .insert([{
-      shop_id: shopData.id,
-      name: ownerName,
-      phone: ownerPhone,
-      role: 'owner',
-      pin: ownerPin,
-      is_active: true
-    }])
-    .select()
-    .single();
-
-  if (userError) {
-    alert('Failed to create admin user.');
-    return null;
-  }
-
-  currentShopId = shopData.id;
-  currentUser = userData;
-  render();
-  return { shop: shopData, user: userData };
-}
-
-// ==========================================
-// 3. UI RENDER ROUTINE
-// ==========================================
-const $ = s => document.querySelector(s);
-
-function render() {
-  const root = $('#root');
-  if (!currentUser) {
-    root.innerHTML = `
-      <div class="lgx">
-        <aside class="lgb">
-          <div>
-            <div style="font-size:36px;margin-bottom:12px">🛒</div>
-            <h1 style="color:#fff;margin:0 0 8px 0;font-size:26px">ቂንዴ Qindee</h1>
-            <p style="opacity:0.9;margin:0 0 24px 0;font-size:15px">Shop and Mini Market Management</p>
-            <div style="display:flex;flex-direction:column;gap:12px;opacity:0.85;font-size:14px">
-              <div>🛒 Sell fast: barcode scan, kg and litre</div>
-              <div>📦 Stock, expiry and low-stock alerts</div>
-              <div>💳 Credit, suppliers and reports</div>
-              <div>🌐 Amharic, English and Afaan Oromo</div>
-            </div>
-          </div>
-          <div style="background:#fff2;padding:12px;border-radius:10px;font-size:13px;margin-top:20px">
-            🎁 1 month free, then from 2,000 birr a month
-          </div>
-        </aside>
-        <div class="lgc">
-          <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
-            ${lsel()}
-          </div>
-          <div style="background:#fff;border:1px solid var(--b);border-radius:16px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,0.03)">
-            ${authMode === 'login' ? `
-              <h2 style="color:var(--g);margin-top:0">Sign in</h2>
-              <label>Phone number</label>
-              <input id="loginPhone" class="in" placeholder="09xxxxxxxx">
-              <label>Password (PIN)</label>
-              <input id="loginPin" type="password" class="in" placeholder="4+ characters">
-              <button class="bp" onclick="handleLogin()">Sign in</button>
-              <div style="text-align:center;margin-top:14px;font-size:14px">
-                New here? <a href="#" onclick="authMode='register';render();return false" style="color:var(--g);font-weight:700">Create account - 1 month free</a>
-              </div>
-            ` : `
-              <h2 style="color:var(--g);margin-top:0">Create Account</h2>
-              <label>Shop Name</label>
-              <input id="regShop" class="in" placeholder="e.g. Kanem Drug Store">
-              <label>Owner Name</label>
-              <input id="regName" class="in" placeholder="e.g. Dr. Tesfalem">
-              <label>Phone Number</label>
-              <input id="regPhone" class="in" placeholder="09xxxxxxxx">
-              <label>PIN Code (Password)</label>
-              <input id="regPin" type="password" class="in" placeholder="4+ characters">
-              <button class="bp" onclick="handleRegister()">Register & Start Cloud POS</button>
-              <div style="text-align:center;margin-top:14px;font-size:14px">
-                Already have an account? <a href="#" onclick="authMode='login';render();return false" style="color:var(--g);font-weight:700">Sign in</a>
-              </div>
-            `}
-          </div>
-          <div style="text-align:center;margin-top:20px;color:var(--m);font-size:12px">
-            © Tesfacare 2026
-          </div>
-        </div>
-      </div>
-    `;
-  } else {
-    root.innerHTML = `
-      <div class="app">
-        <header>
-          <b>ቂንዴ Qindee (Cloud POS)</b>
-          <div class="hr">
-            <span class="un">👤 ${currentUser.name}</span>
-            <button onclick="currentUser=null;render()">Log out</button>
-          </div>
-        </header>
-        <main>
-          <h3>Dashboard</h3>
-          <p class="ok">Connected to Supabase Cloud Database successfully!</p>
-          <div class="kp">
-            <div class="k">Shop ID <b>${currentShopId}</b></div>
-            <div class="k">Role <b>${currentUser.role}</b></div>
-          </div>
-        </main>
-      </div>
-    `;
-  }
-}
-
-async function handleLogin() {
-  const phone = $('#loginPhone').value.trim();
-  const pin = $('#loginPin').value.trim();
-  if (!phone || !pin) {
-    alert('Please enter phone and PIN.');
-    return;
-  }
-  await loginUser(phone, pin);
-}
-
-async function handleRegister() {
-  const shopName = $('#regShop').value.trim();
-  const name = $('#regName').value.trim();
-  const phone = $('#regPhone').value.trim();
-  const pin = $('#regPin').value.trim();
-
-  if (!shopName || !name || !phone || !pin) {
-    alert('Please fill in all fields.');
-    return;
-  }
-
-  await registerShopAndOwner(shopName, name, phone, pin);
-}
-
-window.onload = () => { render(); };
-</script>
-</body>
-</html>
+function add(id){const it=S.items.find(i=>i.id==id),l=cart.find(x=>x.id==id);if(l){if(l.q<it.qty)l.q++}else if(it.qty>0)cart.push({id,n:it.n,q:1,p:it.price,c:it.cost});cartV()}
+function qty(k,d){const l=cart[k],it=S.items.find(i=>i.id==l.id),n=l.q+d;if(n<1)cart.splice(k,1);else if(n<=it.qty)l.q=n;cartV()}
+function ed(k){const l=cart[k];modal('✎ '+l.n,[{k:'price',l:T('Selling price'),t:'number',v:l.p},{k:'disc',
