@@ -38,28 +38,22 @@ h3{margin:16px 0 8px}
 .kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
 .k{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:12px}
 .k b{display:block;font-size:19px;color:var(--g);margin:2px 0}
-.bars{display:flex;gap:4px;height:120px;background:var(--s);border-radius:12px;padding:10px 10px 4px}
-.bc{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
-.bc i{display:block;width:100%;background:linear-gradient(var(--o),var(--g));border-radius:4px 4px 0 0;min-height:2px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.bc small{font-size:9px;color:var(--m);margin-top:3px}
-.pill{padding:3px 10px;border-radius:99px;color:#fff;font-size:13px;-webkit-print-color-adjust:exact}
-.pill.rd{background:var(--r);color:#fff}.pill.or{background:var(--o);color:#fff}.pill.gn{background:var(--gr);color:#fff}
+.pill{padding:3px 10px;border-radius:99px;color:#fff;font-size:13px}
+.pill.rd{background:var(--r)}.pill.or{background:var(--o)}.pill.gn{background:var(--gr)}
 .rd{color:var(--r)}.or{color:var(--o)}.gn{color:var(--gr)}
-.qt{display:flex;align-items:center;gap:6px}
-.qt button{width:34px;height:34px;border:1px solid var(--g);border-radius:8px;background:#fff;color:var(--g);font-size:18px;font-weight:700;padding:0}
-.tot{font-size:18px;font-weight:700;text-align:right;margin:10px 0}
-.warn{background:#fff3cd;color:#664d03;padding:8px;border-radius:8px;margin-bottom:8px}
-.ok{color:var(--gr);font-weight:700;text-align:center}
 .ov{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
 .md{background:#fff;border-radius:14px;padding:16px;width:100%;max-width:380px;max-height:100%;overflow:auto}
 .md label,.lb{display:block;font-size:13px;color:var(--m);margin-top:6px}
-.lg{max-width:380px;margin:5vh auto;padding:20px;text-align:center;background:#fff;border-radius:16px;border:1px solid var(--b);box-shadow:0 4px 12px rgba(0,0,0,0.05)}
-.lg h1{color:var(--g);margin:0 0 10px 0;font-size:24px}
 table{width:100%;border-collapse:collapse;font-size:11px}
 td,th{border-bottom:1px solid var(--b);padding:5px 2px;text-align:right}
 td:first-child,th:first-child{text-align:left}
-#rp{position:fixed;inset:0;background:#fff;overflow:auto;padding:16px;z-index:20}
-@media print{html,body{overflow:visible;height:auto}#root{display:none}#rp{position:static;overflow:visible}.np{display:none!important}}
+
+/* Login Screen Split Layout Styles */
+.lgx{display:flex;flex-direction:column;height:100dvh;overflow:auto;background:#fff}
+.lgb{background:var(--g);color:#fff;padding:24px;display:flex;flex-direction:column;justify-content:space-between}
+.lgc{padding:24px;flex:1;max-width:480px;margin:0 auto;width:100%;display:flex;flex-direction:column;justify-content:center}
+@media(min-width:768px){.lgx{flex-direction:row}.lgb{width:45%;max-width:460px}.lgc{flex:1}}
+.badge{background:#fff2;padding:6px 12px;border-radius:8px;font-size:12px;width:fit-content;margin-bottom:16px}
 </style>
 </head>
 <body>
@@ -76,67 +70,40 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentShopId = null;
 let currentUser = null;
 let LG = 'en';
+let authMode = 'login'; // 'login' or 'register'
+
+// Translations Dictionary
+const D={'Sell':['ሽያጭ','Gurgurtaa'],'Home':['መነሻ','Fuula jalqabaa'],'Items':['ዕቃ','Meeshaalee'],'Sign in':['ግባ','Seeni'],'Log out':['ውጣ','Ba’i'],'Password (4+ characters, case-sensitive)':['የይለፍ ቃል (4+ ፊደላት፣ ትልቅ/ትንሽ ይለያል)','Jecha iccitii (mallattoolee yoo xiqqaate 4; qubee gurguddaa fi xixiqqaan adda)'],'Create account - 1 month free':['አካውንት ክፈት - 1 ወር ነጻ','Herrega banadhu - ji’a 1 bilisa']};
+const T=k=>{const d=D[k];return d&&LG!='en'?(d[LG=='am'?0:1]||k):k};
+const lsel=sm=>`<select class=in style="max-width:140px;background:#fff;color:#000" onchange="setL(this.value)">${[['en','English','EN'],['am','አማርኛ','አማ'],['om','Afaan Oromo','Afaan']].map(a=>`<option value=${a[0]} ${a[0]==LG?'selected':''}>${sm?a[2]:a[1]}</option>`).join('')}</select>`;
+function setL(v){LG=v;render();}
 
 // ==========================================
 // 2. CORE CLOUD FUNCTIONS
 // ==========================================
 async function loadItems() {
   if (!currentShopId) return [];
+  const { data, error } = await supabaseClient.from('items').select('*').eq('shop_id', currentShopId);
+  return error ? [] : (data || []);
+}
+
+async function loginUser(phone, pin) {
   const { data, error } = await supabaseClient
-    .from('items')
-    .select('*')
-    .eq('shop_id', currentShopId);
-  
-  if (error) {
-    console.error('Error loading items:', error);
-    return [];
-  }
-  return data || [];
-}
+    .from('users')
+    .select('*, shops(*)')
+    .eq('phone', phone)
+    .eq('pin', pin)
+    .single();
 
-async function saveItem(itemData) {
-  if (!currentShopId) return;
-  const { error } = await supabaseClient
-    .from('items')
-    .insert([{ 
-      shop_id: currentShopId,
-      name: itemData.name,
-      unit: itemData.unit || 'piece',
-      cost: itemData.cost || 0,
-      price: itemData.price || 0,
-      qty: itemData.qty || 0,
-      reorder_qty: itemData.reorderQty || 5,
-      expiry_date: itemData.expiryDate || null,
-      batch_no: itemData.batchNo || null,
-      barcode: itemData.barcode || null
-    }]);
-    
-  if (error) {
-    console.error('Error saving item:', error);
-    alert('Failed to save item to cloud.');
+  if (error || !data) {
+    alert('Invalid phone number or PIN.');
+    return false;
   }
-}
 
-async function recordSale(saleData) {
-  if (!currentShopId) return;
-  const { error } = await supabaseClient
-    .from('sales')
-    .insert([{ 
-      shop_id: currentShopId, 
-      user_id: currentUser ? currentUser.id : null,
-      total: saleData.total,
-      payment_method: saleData.paymentMethod,
-      bank: saleData.bank || null,
-      customer_name: saleData.customerName || null,
-      cash_given: saleData.cashGiven || 0,
-      is_late: saleData.isLate || false,
-      sale_data: saleData.items
-    }]);
-
-  if (error) {
-    console.error('Error recording sale:', error);
-    alert('Failed to record sale to cloud.');
-  }
+  currentUser = data;
+  currentShopId = data.shop_id;
+  render();
+  return true;
 }
 
 async function registerShopAndOwner(shopName, ownerName, ownerPhone, ownerPin) {
@@ -147,17 +114,14 @@ async function registerShopAndOwner(shopName, ownerName, ownerPhone, ownerPin) {
     .single();
 
   if (shopError) {
-    console.error('Error creating shop:', shopError);
     alert('Shop registration failed.');
     return null;
   }
 
-  const newShopId = shopData.id;
-
   const { data: userData, error: userError } = await supabaseClient
     .from('users')
     .insert([{
-      shop_id: newShopId,
+      shop_id: shopData.id,
       name: ownerName,
       phone: ownerPhone,
       role: 'owner',
@@ -168,12 +132,11 @@ async function registerShopAndOwner(shopName, ownerName, ownerPhone, ownerPin) {
     .single();
 
   if (userError) {
-    console.error('Error creating owner user:', userError);
     alert('Failed to create admin user.');
     return null;
   }
 
-  currentShopId = newShopId;
+  currentShopId = shopData.id;
   currentUser = userData;
   render();
   return { shop: shopData, user: userData };
@@ -188,19 +151,57 @@ function render() {
   const root = $('#root');
   if (!currentUser) {
     root.innerHTML = `
-      <div class="lg">
-        <h1>ቂንዴ Qindee</h1>
-        <p style="color:var(--m);font-size:13px;margin-bottom:16px">ሱቅዎን በተደራጀ መንገድ ያስተዳድሩ</p>
-        <div style="text-align:left">
-          <label>Shop Name</label>
-          <input id="regShop" class="in" placeholder="e.g. Kanem Drug Store">
-          <label>Owner Name</label>
-          <input id="regName" class="in" placeholder="e.g. Dr. Tesfalem">
-          <label>Phone Number</label>
-          <input id="regPhone" class="in" placeholder="09xxxxxxxx">
-          <label>PIN Code (Password)</label>
-          <input id="regPin" type="password" class="in" placeholder="4+ characters">
-          <button class="bp" onclick="handleRegister()">Register & Start Cloud POS</button>
+      <div class="lgx">
+        <aside class="lgb">
+          <div>
+            <div style="font-size:36px;margin-bottom:12px">🛒</div>
+            <h1 style="color:#fff;margin:0 0 8px 0;font-size:26px">ቂንዴ Qindee</h1>
+            <p style="opacity:0.9;margin:0 0 24px 0;font-size:15px">Shop and Mini Market Management</p>
+            <div style="display:flex;flex-direction:column;gap:12px;opacity:0.85;font-size:14px">
+              <div>🛒 Sell fast: barcode scan, kg and litre</div>
+              <div>📦 Stock, expiry and low-stock alerts</div>
+              <div>💳 Credit, suppliers and reports</div>
+              <div>🌐 Amharic, English and Afaan Oromo</div>
+            </div>
+          </div>
+          <div style="background:#fff2;padding:12px;border-radius:10px;font-size:13px;margin-top:20px">
+            🎁 1 month free, then from 2,000 birr a month
+          </div>
+        </aside>
+        <div class="lgc">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+            ${lsel()}
+          </div>
+          <div style="background:#fff;border:1px solid var(--b);border-radius:16px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,0.03)">
+            ${authMode === 'login' ? `
+              <h2 style="color:var(--g);margin-top:0">Sign in</h2>
+              <label>Phone number</label>
+              <input id="loginPhone" class="in" placeholder="09xxxxxxxx">
+              <label>Password (PIN)</label>
+              <input id="loginPin" type="password" class="in" placeholder="4+ characters">
+              <button class="bp" onclick="handleLogin()">Sign in</button>
+              <div style="text-align:center;margin-top:14px;font-size:14px">
+                New here? <a href="#" onclick="authMode='register';render();return false" style="color:var(--g);font-weight:700">Create account - 1 month free</a>
+              </div>
+            ` : `
+              <h2 style="color:var(--g);margin-top:0">Create Account</h2>
+              <label>Shop Name</label>
+              <input id="regShop" class="in" placeholder="e.g. Kanem Drug Store">
+              <label>Owner Name</label>
+              <input id="regName" class="in" placeholder="e.g. Dr. Tesfalem">
+              <label>Phone Number</label>
+              <input id="regPhone" class="in" placeholder="09xxxxxxxx">
+              <label>PIN Code (Password)</label>
+              <input id="regPin" type="password" class="in" placeholder="4+ characters">
+              <button class="bp" onclick="handleRegister()">Register & Start Cloud POS</button>
+              <div style="text-align:center;margin-top:14px;font-size:14px">
+                Already have an account? <a href="#" onclick="authMode='login';render();return false" style="color:var(--g);font-weight:700">Sign in</a>
+              </div>
+            `}
+          </div>
+          <div style="text-align:center;margin-top:20px;color:var(--m);font-size:12px">
+            © Tesfacare 2026
+          </div>
         </div>
       </div>
     `;
@@ -208,16 +209,33 @@ function render() {
     root.innerHTML = `
       <div class="app">
         <header>
-          <b>ቂንዴ Qindee (Cloud Connected)</b>
-          <span>Welcome, ${currentUser.name}</span>
+          <b>ቂንዴ Qindee (Cloud POS)</b>
+          <div class="hr">
+            <span class="un">👤 ${currentUser.name}</span>
+            <button onclick="currentUser=null;render()">Log out</button>
+          </div>
         </header>
         <main>
           <h3>Dashboard</h3>
-          <p class="ok">Successfully connected to Supabase Cloud Database!</p>
+          <p class="ok">Connected to Supabase Cloud Database successfully!</p>
+          <div class="kp">
+            <div class="k">Shop ID <b>${currentShopId}</b></div>
+            <div class="k">Role <b>${currentUser.role}</b></div>
+          </div>
         </main>
       </div>
     `;
   }
+}
+
+async function handleLogin() {
+  const phone = $('#loginPhone').value.trim();
+  const pin = $('#loginPin').value.trim();
+  if (!phone || !pin) {
+    alert('Please enter phone and PIN.');
+    return;
+  }
+  await loginUser(phone, pin);
 }
 
 async function handleRegister() {
@@ -231,17 +249,10 @@ async function handleRegister() {
     return;
   }
 
-  alert('Registering shop in cloud...');
-  const res = await registerShopAndOwner(shopName, name, phone, pin);
-  if (res) {
-    alert('Shop registered successfully!');
-  }
+  await registerShopAndOwner(shopName, name, phone, pin);
 }
 
-// Initial render call on load
-window.onload = () => {
-  render();
-};
+window.onload = () => { render(); };
 </script>
 </body>
 </html>
